@@ -1,4 +1,4 @@
-package com.de300.AdvGrapics;
+package com.de300.AdvGraphics;
 
 
 import java.nio.FloatBuffer;
