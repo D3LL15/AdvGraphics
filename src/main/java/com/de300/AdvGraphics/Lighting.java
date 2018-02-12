@@ -44,7 +44,7 @@ public class Lighting {
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-		window = glfwCreateWindow(800 /* width */, 600 /* height */, "InitialGeometry", 0, 0);
+		window = glfwCreateWindow(800 /* width */, 600 /* height */, "Lighting", 0, 0);
 		glfwMakeContextCurrent(window);
 		glfwSwapInterval(1);
 		glfwShowWindow(window);
