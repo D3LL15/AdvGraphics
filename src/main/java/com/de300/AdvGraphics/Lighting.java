@@ -69,10 +69,10 @@ public class Lighting {
 				"in vec3 n;",
 				"out vec3 position;",
 				"out vec3 normal;",
-				"void main() {",
-				"  normal = normalize(view * model * vec4(n, 1.0));",
-				"  position = (view * model * vec4(v, 1.0)).xyz;",
-				"  gl_Position = projection * view * model * vec4(v, 1.0);",
+				"void main() {\n",
+				"  normal = normalize(view * model * vec4(n, 1.0)).xyz;\n",
+				"  position = (view * model * vec4(v, 1.0)).xyz;\n",
+				"  gl_Position = projection * view * model * vec4(v, 1.0);\n",
 				//"  gl_Position = vec4(v, 1.0);",
 				"}"
 		};
@@ -84,7 +84,7 @@ public class Lighting {
 				"in vec3 normal;",
 				"out vec4 frag_color;",
 				"const vec3 purple = vec3(0.2, 0.6, 0.8);",
-				"const vec3 lightPosition = vec3(100.0, -100.0, 100.0);",
+				"const vec3 lightPosition = vec3(100.0, -50.0, 100.0);",
 				"const vec3 eyePosition = vec3(0.0, 0.0, 0.0);",
 				"void main() {",
 				"  vec3 n = normalize(normal);",
@@ -92,7 +92,7 @@ public class Lighting {
 				"  vec3 e = normalize(position - eyePosition);",
 				"  vec3 r = reflect(l, n);",
 				"  float ambient = 0.2;",
-				"  float diffuse = 0.4 * clamp(0, dot(n, 1), 1);",
+				"  float diffuse = 0.4 * clamp(0, dot(n, l), 1);",
 				"  float specular = 0.4 * pow(clamp(0, dot(e, r), 1), 2);",
 				"  frag_color = vec4(purple * (ambient + diffuse + specular), 1.0);",
 				"}"
@@ -103,10 +103,14 @@ public class Lighting {
 		glShaderSource(vs, vertex_shader);
 		glCompileShader(vs);
 
+		System.out.println(glGetShaderInfoLog(vs));
+
 		// Compile fragment shader
 		int fs = glCreateShader(GL_FRAGMENT_SHADER);
 		glShaderSource(fs, fragment_shader);
 		glCompileShader(fs);
+
+		System.out.println(glGetShaderInfoLog(fs));
 
 		// Link vertex and fragment shaders into an active program
 		program = glCreateProgram();
@@ -149,25 +153,25 @@ public class Lighting {
 				1f, -1f, 1f, -1f, -1f, -1f, -1f, -1f, 1f,  //-y
 				1f, -1f, 1f, 1f, -1f, -1f, -1f, -1f, -1f  //-y
 		};
+		/*float[] coords = new float[] { -1f, 1f, 1f, -1f, -1f, 1f, 1f, 1f, 1f, //top
+				-1f, -1f, 1f,1f, -1f, 1f, 1f, 1f, 1f,  //top
+				-1f, 1f, -1f,1f, 1f, -1f, -1f, -1f, -1f,   //bottom
+				-1f, -1f, -1f,1f, 1f, -1f, 1f, -1f, -1f,   //bottom
+				-1f, -1f, 1f, -1f, 1f, -1f, -1f, -1f, -1f, //-x
+				-1f, 1f, -1f, -1f, -1f, 1f, -1f, 1f, 1f, //-x
+				1f, -1f, 1f,1f, -1f, -1f, 1f, 1f, -1f,   //+x
+				1f, 1f, -1f,1f, 1f, 1f, 1f, -1f, 1f,   //+x
+				1f, 1f, 1f, -1f, 1f, -1f, -1f, 1f, 1f, //+y
+				1f, 1f, 1f, 1f, 1f, -1f, -1f, 1f, -1f, //+y
+				1f, -1f, 1f, -1f, -1f, 1f, -1f, -1f, -1f,  //-y
+				1f, -1f, 1f, -1f, -1f, -1f, 1f, -1f, -1f  //-y
+		};*/
 		FloatBuffer fbo = BufferUtils.createFloatBuffer(coords.length);
 		fbo.put(coords);                                // Copy the vertex coords into the floatbuffer
 		fbo.flip();                                     // Mark the floatbuffer ready for reads
 
-		float[] normals = new float[] { -1f, 1f, 1f, 1f, 1f, 1f, -1f, -1f, 1f, //top
-				-1f, -1f, 1f, 1f, 1f, 1f, 1f, -1f, 1f, //top
-				-1f, 1f, -1f, -1f, -1f, -1f, 1f, 1f, -1f,  //bottom
-				-1f, -1f, -1f, 1f, -1f, -1f, 1f, 1f, -1f,  //bottom
-				-1f, -1f, 1f, -1f, -1f, -1f, -1f, 1f, -1f, //-x
-				-1f, 1f, -1f, -1f, 1f, 1f, -1f, -1f, 1f, //-x
-				1f, -1f, 1f, 1f, 1f, -1f, 1f, -1f, -1f,  //+x
-				1f, 1f, -1f, 1f, -1f, 1f, 1f, 1f, 1f,  //+x
-				1f, 1f, 1f, -1f, 1f, 1f, -1f, 1f, -1f, //+y
-				1f, 1f, 1f, -1f, 1f, -1f, 1f, 1f, -1f, //+y
-				1f, -1f, 1f, -1f, -1f, -1f, -1f, -1f, 1f,  //-y
-				1f, -1f, 1f, 1f, -1f, -1f, -1f, -1f, -1f  //-y
-		};
-		FloatBuffer fbo2 = BufferUtils.createFloatBuffer(normals.length);
-		fbo2.put(normals);                                // Copy the normal coords into the floatbuffer
+		FloatBuffer fbo2 = BufferUtils.createFloatBuffer(coords.length);
+		fbo2.put(coords);                                // Copy the normal coords into the floatbuffer
 		fbo2.flip();                                     // Mark the floatbuffer ready for reads
 
 
@@ -194,8 +198,8 @@ public class Lighting {
 		if (viewLoc != -1) {
 			//Matrix4f scale = Matrix4f.scale(0.5f, 0.5f, 0.5f);
 			Matrix4f scale = new Matrix4f();
-			Matrix4f translation = Matrix4f.translate(0.0f, 0.0f, -5f);
-			Matrix4f rotation = Matrix4f.rotate(45f, 1f, 1f, 1f);
+			Matrix4f translation = Matrix4f.translate(0.0f, 0.0f, -1.5f);
+			Matrix4f rotation = Matrix4f.rotate(20f, 1f, 1f, 1f);
 			Matrix4f view = translation.multiply(rotation.multiply(scale));
 			FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
 			view.toBuffer(buffer);
