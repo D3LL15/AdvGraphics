@@ -1,6 +1,5 @@
 package com.de300.AdvGraphics;
 
-
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -16,21 +15,22 @@ import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.stb.STBImage.*;
 
 //relevant tutorial at https://github.com/SilverTiger/lwjgl3-tutorial/wiki/Textures
-public class Perspective {
+public class Lighting {
 
 	long window;
 	int vbo;
+	int vbo_1;
 	int vao;
 	int program;
 
-	public Perspective() {
+	public Lighting() {
 		setup();
 		mainLoop();
 		cleanup();
 	}
 
 	public static void main(String[] args) {
-		Perspective p = new Perspective();
+		Lighting l = new Lighting();
 	}
 
 	void setup() {
@@ -66,7 +66,12 @@ public class Perspective {
 				"uniform mat4 view;",
 				"uniform mat4 projection;",
 				"in vec3 v;",
+				"in vec3 n;",
+				"out vec3 position;",
+				"out vec3 normal;",
 				"void main() {",
+				"  normal = normalize(view * model * vec4(n, 1.0));",
+				"  position = (view * model * vec4(v, 1.0)).xyz;",
 				"  gl_Position = projection * view * model * vec4(v, 1.0);",
 				//"  gl_Position = vec4(v, 1.0);",
 				"}"
@@ -75,9 +80,21 @@ public class Perspective {
 		// Fragment shader source
 		String[] fragment_shader = {
 				"#version 330\n",
+				"in vec3 position;",
+				"in vec3 normal;",
 				"out vec4 frag_color;",
+				"const vec3 purple = vec3(0.2, 0.6, 0.8);",
+				"const vec3 lightPosition = vec3(100.0, -100.0, 100.0);",
+				"const vec3 eyePosition = vec3(0.0, 0.0, 0.0);",
 				"void main() {",
-				"  frag_color = vec4(1.0, 1.0, 1.0, 1.0);",
+				"  vec3 n = normalize(normal);",
+				"  vec3 l = normalize(lightPosition - position);",
+				"  vec3 e = normalize(position - eyePosition);",
+				"  vec3 r = reflect(l, n);",
+				"  float ambient = 0.2;",
+				"  float diffuse = 0.4 * clamp(0, dot(n, 1), 1);",
+				"  float specular = 0.4 * pow(clamp(0, dot(e, r), 1), 2);",
+				"  frag_color = vec4(purple * (ambient + diffuse + specular), 1.0);",
 				"}"
 		};
 
@@ -104,6 +121,7 @@ public class Perspective {
 		// Clean up
 
 		glDeleteBuffers(vbo);
+		glDeleteBuffers(vbo_1);
 		glDeleteVertexArrays(vao);
 		glfwDestroyWindow(window);
 		glfwTerminate();
@@ -135,12 +153,32 @@ public class Perspective {
 		fbo.put(coords);                                // Copy the vertex coords into the floatbuffer
 		fbo.flip();                                     // Mark the floatbuffer ready for reads
 
+		float[] normals = new float[] { -1f, 1f, 1f, 1f, 1f, 1f, -1f, -1f, 1f, //top
+				-1f, -1f, 1f, 1f, 1f, 1f, 1f, -1f, 1f, //top
+				-1f, 1f, -1f, -1f, -1f, -1f, 1f, 1f, -1f,  //bottom
+				-1f, -1f, -1f, 1f, -1f, -1f, 1f, 1f, -1f,  //bottom
+				-1f, -1f, 1f, -1f, -1f, -1f, -1f, 1f, -1f, //-x
+				-1f, 1f, -1f, -1f, 1f, 1f, -1f, -1f, 1f, //-x
+				1f, -1f, 1f, 1f, 1f, -1f, 1f, -1f, -1f,  //+x
+				1f, 1f, -1f, 1f, -1f, 1f, 1f, 1f, 1f,  //+x
+				1f, 1f, 1f, -1f, 1f, 1f, -1f, 1f, -1f, //+y
+				1f, 1f, 1f, -1f, 1f, -1f, 1f, 1f, -1f, //+y
+				1f, -1f, 1f, -1f, -1f, -1f, -1f, -1f, 1f,  //-y
+				1f, -1f, 1f, 1f, -1f, -1f, -1f, -1f, -1f  //-y
+		};
+		FloatBuffer fbo2 = BufferUtils.createFloatBuffer(normals.length);
+		fbo2.put(normals);                                // Copy the normal coords into the floatbuffer
+		fbo2.flip();                                     // Mark the floatbuffer ready for reads
+
 
 		vao = glGenVertexArrays();             // Get an OGL name for the VAO
 		glBindVertexArray(vao);                    // Activate the VAO
 		int v = glGetAttribLocation(program, "v");
 		System.out.println(v);
 		glEnableVertexAttribArray(v);              // Enable the VAO's first attribute (0)
+		int n = glGetAttribLocation(program, "n");
+		System.out.println(n);
+		glEnableVertexAttribArray(n);
 
 		int modelLoc = glGetUniformLocation(program, "model");
 		System.out.println(modelLoc);
@@ -188,6 +226,11 @@ public class Perspective {
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);   // Activate the VBO
 		glVertexAttribPointer(v, 3, GL_FLOAT, false, 0, 0);  // Link VBO to VAO attrib 0
 		glBufferData(GL_ARRAY_BUFFER, fbo, GL_STATIC_DRAW);  // Send VBO data to GPU
+
+		vbo_1 = glGenBuffers();                  // Get an OGL name for the VBO
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_1);
+		glVertexAttribPointer(n, 3, GL_FLOAT, false, 0, 0);
+		glBufferData(GL_ARRAY_BUFFER, fbo2, GL_STATIC_DRAW);  // Send VBO data to GPU
 
 		///////////////////////////////////////////////////////////////////////////
 		// Loop until window is closed
