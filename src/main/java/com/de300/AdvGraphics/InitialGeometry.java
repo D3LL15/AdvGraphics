@@ -80,8 +80,7 @@ public class InitialGeometry {
 				"uniform sampler2D texImage;",
 				"void main() {",
 				"  vec4 textureColor = texture(texImage, textureCoord);",
-				//"  fragColor = textureColor;",
-				"  frag_color = vec4(1.0, 1.0, 1.0, 1.0);",
+				"  frag_color = vec4(1.0, 1.0, 1.0, 1.0)*textureColor;",
 				"}"
 		};
 
@@ -171,20 +170,25 @@ public class InitialGeometry {
 		// Bind the VBO in a Vertex Array Object
 		vao = glGenVertexArrays();             // Get an OGL name for the VAO
 		glBindVertexArray(vao);                    // Activate the VAO
-		glEnableVertexAttribArray(0);              // Enable the VAO's first attribute (0)
+		int v = glGetAttribLocation(program, "v");
+		System.out.println(v);
+		glEnableVertexAttribArray(v);              // Enable the VAO's first attribute (0)
 		int texAttrib = glGetAttribLocation(program, "texcoord");
+		System.out.println(texAttrib);
 		glEnableVertexAttribArray(texAttrib);
 
 		// Store the FloatBuffer's contents in a Vertex Buffer Object
 		vbo_0 = glGenBuffers();                  // Get an OGL name for the VBO
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_0);   // Activate the VBO
+		glVertexAttribPointer(v, 3, GL_FLOAT, false, 0, 0);  // Link VBO to VAO attrib 0
 		glBufferData(GL_ARRAY_BUFFER, fbo, GL_STATIC_DRAW);  // Send VBO data to GPU
-		glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);  // Link VBO to VAO attrib 0
+
 
 		vbo_1 = glGenBuffers();                  // Get an OGL name for the VBO
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_1);
-		glBufferData(GL_ARRAY_BUFFER, fbo2, GL_STATIC_DRAW);  // Send VBO data to GPU
 		glVertexAttribPointer(texAttrib, 2, GL_FLOAT, false, 0, 0);
+		glBufferData(GL_ARRAY_BUFFER, fbo2, GL_STATIC_DRAW);  // Send VBO data to GPU
+
 
 		///////////////////////////////////////////////////////////////////////////
 		// Loop until window is closed
