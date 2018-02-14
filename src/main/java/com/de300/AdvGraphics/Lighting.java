@@ -198,8 +198,8 @@ public class Lighting {
 		if (viewLoc != -1) {
 			//Matrix4f scale = Matrix4f.scale(0.5f, 0.5f, 0.5f);
 			Matrix4f scale = new Matrix4f();
-			Matrix4f translation = Matrix4f.translate(0.0f, 0.0f, -1.5f);
-			Matrix4f rotation = Matrix4f.rotate(20f, 1f, 1f, 1f);
+			Matrix4f translation = Matrix4f.translate(0.0f, 0.0f, -5f);
+			Matrix4f rotation = Matrix4f.rotate(40f, 1f, 1f, 1f);
 			Matrix4f view = translation.multiply(rotation.multiply(scale));
 			FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
 			view.toBuffer(buffer);
@@ -211,7 +211,7 @@ public class Lighting {
 		if (projLoc != -1) {
 			float ratio = 640f / 480f;
 			//Matrix4f projection = Matrix4f.orthographic(-ratio, ratio, -1f, 1f, -10f, 10f);
-			Matrix4f projection = Matrix4f.frustum(-ratio, ratio, -1f, 1f, 0.1f, 10f);
+			//Matrix4f projection = Matrix4f.frustum(-ratio, ratio, -1f, 1f, 0.1f, 10f);
 			/*Matrix4f projection = new Matrix4f(new Vector4f(1/ratio, 0f, 0f, 0f),
 					new Vector4f(0f, 1, 0f, 0f),
 					new Vector4f(0f, 0f, (-0.1f-10f)/(0.1f-10f), 1f),
@@ -220,6 +220,12 @@ public class Lighting {
 					new Vector4f(0f, 1, 0f, 0f),
 					new Vector4f(0f, 0f, (-0.1f-10f)/(0.1f-10f), 2*10f*0.1f/(0.1f-10f)),
 					new Vector4f(0f, 0f, 1f, 0f));*/
+			double f = 1.0 / Math.tan((50.0 * 2.0 * Math.PI / 360.0) / 2.0);
+			Matrix4f projection = new Matrix4f(new Vector4f((float) f / ratio, 0f, 0f, 0f),
+					new Vector4f(0f, (float)f, 0f, 0f),
+					new Vector4f(0f, 0f, (0.1f+10f)/(0.1f-10f), -1f),
+					new Vector4f(0f, 0f, (2*10f*0.1f)/(0.1f-10f), 0f));
+
 			FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
 			projection.toBuffer(buffer);
 			glUniformMatrix4fv(projLoc, false, buffer);
